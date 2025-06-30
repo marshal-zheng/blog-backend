@@ -18,7 +18,6 @@ services:
       litellm
         --config /app/config/litellm.yaml
         --port 4000
-        --request-logging
     env_file:
       - litellm/config-secret.env                       # 存放 OPENAI_API_KEY 等
     volumes:
