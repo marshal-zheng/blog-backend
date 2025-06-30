@@ -7,24 +7,30 @@ general_settings:
 
 router_settings:
   model_list:
+    # ==================== OpenAI 模型 ====================
     - model_name: gpt-3.5-turbo
       litellm_provider: openai
 
+    # ==================== 千问模型 ====================
+    # 使用 LiteLLM 支持的标准千问模型名称
+    - model_name: qwen-turbo
+      litellm_provider: dashscope
+    
+    - model_name: qwen-plus
+      litellm_provider: dashscope
+    
     - model_name: qwen-max
       litellm_provider: dashscope
 
-    - model_name: qwen-plus-latest
-      litellm_provider: dashscope
-
-    - model_name: qwen-turbo-latest
-      litellm_provider: dashscope
-
+    # ==================== DeepSeek 模型 ====================
+    # 使用 LiteLLM 支持的标准 DeepSeek 模型名称
     - model_name: deepseek-chat
       litellm_provider: deepseek
-
-    - model_name: deepseek-reasoner
+    
+    - model_name: deepseek-coder
       litellm_provider: deepseek
 
+    # ==================== 本地模型 ====================
     - model_name: llama3
       litellm_provider: ollama
       api_base: http://host.docker.internal:11434
