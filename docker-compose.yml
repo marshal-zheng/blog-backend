@@ -23,6 +23,8 @@ services:
       - litellm/config-secret.env                       # 存放 OPENAI_API_KEY 等
     volumes:
       - ./litellm/litellm.yaml:/app/config/litellm.yaml:ro
+    ports:
+      - "4000:4000"                                     # 映射端口到宿主机
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/v1/models"]
       interval: 30s
