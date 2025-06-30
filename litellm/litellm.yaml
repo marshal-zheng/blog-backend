@@ -1,4 +1,4 @@
-# LiteLLM 配置文件
+# LiteLLM 配置文件 - 使用OpenAI兼容端点
 # 环境变量配置
 environment_variables:
   OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -7,7 +7,7 @@ environment_variables:
 
 # 模型列表配置
 model_list:
-  # ==================== OpenAI 模型 ====================
+  # ==================== OpenAI 原生模型 ====================
   - model_name: gpt-3.5-turbo
     litellm_params:
       model: gpt-3.5-turbo
@@ -18,41 +18,41 @@ model_list:
       model: gpt-4
       api_key: os.environ/OPENAI_API_KEY
 
-  # ==================== 千问模型 ====================
+  # ==================== 千问模型 (OpenAI兼容端点) ====================
   - model_name: qwen-turbo
     litellm_params:
-      model: qwen-turbo
-      api_key: os.environ/DASHSCOPE_API_KEY
+      model: openai/qwen-turbo
       api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
+      api_key: os.environ/DASHSCOPE_API_KEY
 
   - model_name: qwen-plus
     litellm_params:
-      model: qwen-plus
-      api_key: os.environ/DASHSCOPE_API_KEY
+      model: openai/qwen-plus
       api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
+      api_key: os.environ/DASHSCOPE_API_KEY
 
   - model_name: qwen-max
     litellm_params:
-      model: qwen-max
-      api_key: os.environ/DASHSCOPE_API_KEY
+      model: openai/qwen-max
       api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
+      api_key: os.environ/DASHSCOPE_API_KEY
 
-  # ==================== DeepSeek 模型 ====================
+  # ==================== DeepSeek模型 (OpenAI兼容端点) ====================
   - model_name: deepseek-chat
     litellm_params:
-      model: deepseek-chat
+      model: openai/deepseek-chat
+      api_base: https://api.deepseek.com/v1
       api_key: os.environ/DEEPSEEK_API_KEY
-      api_base: https://api.deepseek.com
 
   - model_name: deepseek-coder
     litellm_params:
-      model: deepseek-coder
+      model: openai/deepseek-coder
+      api_base: https://api.deepseek.com/v1
       api_key: os.environ/DEEPSEEK_API_KEY
-      api_base: https://api.deepseek.com
 
 # 通用设置
 litellm_settings:
   success_callback: ["langfuse"]
-  failure_callback: ["langfuse"]
+  drop_params: true
   set_verbose: true
   request_timeout: 60
