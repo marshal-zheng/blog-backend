@@ -1,5 +1,6 @@
 version: "3.9"
 
+# ───────────── 共用日志策略 ─────────────
 x-common-logging: &common-logging
   logging:
     driver: "json-file"
@@ -8,49 +9,46 @@ x-common-logging: &common-logging
       max-file: "5"
 
 services:
-  ## ──────────────── 1) LLM Gateway ────────────────
+  # ─────────────── 1) LLM Gateway ───────────────
   litellm:
     <<: *common-logging
-    image: ghcr.io/berriai/litellm:main-latest
+    image: ghcr.io/berriai/litellm:main-latest          # 跟随主分支最新功能
     container_name: litellm-proxy
     command: >
       litellm
         --config /app/config/litellm.yaml
         --port 4000
-        --no-auth
-        --request-logging       # 结构化日志
+        --request-logging
     env_file:
-      - litellm/config-secret.env       # API Keys (Docker secret 亦可)
+      - litellm/config-secret.env                       # 存放 OPENAI_API_KEY 等
     volumes:
       - ./litellm/litellm.yaml:/app/config/litellm.yaml:ro
-    # spend_cap & rate_limit 写在 litellm.yaml
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/v1/models"]
       interval: 30s
       timeout: 5s
       retries: 3
+    restart: unless-stopped
     networks: [backend]
-    profiles: ["proxy", "full"]         # 两个 profile 都启
+    profiles: ["proxy", "full"]
 
-  ## ──────────────── 2) AI-Service (RAG / 工作流) ────────────────
+  # ─────────────── 2) AI-Service (RAG / 工作流) ───────────────
   ai-service:
     <<: *common-logging
     build: ./ai-service
     container_name: ai-service
-    env_file:
-      - .env                  # DATABASE_URL / LITELLM_ENDPOINT
-    depends_on:
-      - litellm
-      - pgvector
+    env_file: [.env]                                    # DATABASE_URL / LITELLM_ENDPOINT
+    depends_on: [litellm, pgvector]
     networks: [backend]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 5s
       retries: 3
-    profiles: ["full"]        # 仅 full profile 启
+    restart: unless-stopped
+    profiles: ["full"]
 
-  ## ──────────────── 3) pgvector (向量库) ────────────────
+  # ─────────────── 3) pgvector (向量库) ───────────────
   pgvector:
     <<: *common-logging
     image: postgres:15-alpine
@@ -63,16 +61,19 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./pgvector/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
     networks: [backend]
+    restart: unless-stopped
     profiles: ["full"]
 
-  ## ──────────────── 4) Grafana / Prometheus (可选监控) ────────────────
+  # ─────────────── 4) Prometheus ───────────────
   prometheus:
     image: prom/prometheus:v2.52.0
     volumes:
       - ./grafana/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks: [backend]
+    restart: unless-stopped
     profiles: ["full"]
 
+  # ─────────────── 5) Grafana ───────────────
   grafana:
     image: grafana/grafana-oss:11.0.0
     volumes:
@@ -80,8 +81,10 @@ services:
       - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     depends_on: [prometheus]
     networks: [backend]
+    restart: unless-stopped
     profiles: ["full"]
 
+# ─────────────── 网络与卷 ───────────────
 networks:
   backend:
     driver: bridge
