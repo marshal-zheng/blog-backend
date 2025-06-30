@@ -1,0 +1,91 @@
+version: "3.9"
+
+x-common-logging: &common-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  ## ──────────────── 1) LLM Gateway ────────────────
+  litellm:
+    <<: *common-logging
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm-proxy
+    command: >
+      litellm
+        --config /app/config/litellm.yaml
+        --port 4000
+        --no-auth
+        --request-logging       # 结构化日志
+    env_file:
+      - litellm/config-secret.env       # API Keys (Docker secret 亦可)
+    volumes:
+      - ./litellm/litellm.yaml:/app/config/litellm.yaml:ro
+    # spend_cap & rate_limit 写在 litellm.yaml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/v1/models"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [backend]
+    profiles: ["proxy", "full"]         # 两个 profile 都启
+
+  ## ──────────────── 2) AI-Service (RAG / 工作流) ────────────────
+  ai-service:
+    <<: *common-logging
+    build: ./ai-service
+    container_name: ai-service
+    env_file:
+      - .env                  # DATABASE_URL / LITELLM_ENDPOINT
+    depends_on:
+      - litellm
+      - pgvector
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    profiles: ["full"]        # 仅 full profile 启
+
+  ## ──────────────── 3) pgvector (向量库) ────────────────
+  pgvector:
+    <<: *common-logging
+    image: postgres:15-alpine
+    container_name: pgvector
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag_pass
+      POSTGRES_DB: rag_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./pgvector/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    networks: [backend]
+    profiles: ["full"]
+
+  ## ──────────────── 4) Grafana / Prometheus (可选监控) ────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    volumes:
+      - ./grafana/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks: [backend]
+    profiles: ["full"]
+
+  grafana:
+    image: grafana/grafana-oss:11.0.0
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on: [prometheus]
+    networks: [backend]
+    profiles: ["full"]
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  pgdata:
+  grafana_data:

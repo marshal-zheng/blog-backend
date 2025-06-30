@@ -1,0 +1,18 @@
+general_settings:
+  api_keys:
+    openai:    ${OPENAI_API_KEY}
+    deepseek:  ${DEEPSEEK_API_KEY}
+    dashscope: ${TONGYI_API_KEY}
+  default_timeout: 60
+
+router_settings:
+  model_list:
+    - model_name: gpt-3.5-turbo
+      litellm_provider: openai
+    - model_name: deepseek-chat
+      litellm_provider: deepseek
+    - model_name: qwen-turbo
+      litellm_provider: dashscope
+    - model_name: llama3
+      litellm_provider: ollama
+      api_base: http://host.docker.internal:11434
