@@ -1,36 +1,58 @@
-general_settings:
-  api_keys:
-    openai:    ${OPENAI_API_KEY}
-    deepseek:  ${DEEPSEEK_API_KEY}
-    dashscope: ${TONGYI_API_KEY}
-  default_timeout: 60
+# LiteLLM 配置文件
+# 环境变量配置
+environment_variables:
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+  DASHSCOPE_API_KEY: ${TONGYI_API_KEY}
 
-router_settings:
-  model_list:
-    # ==================== OpenAI 模型 ====================
-    - model_name: gpt-3.5-turbo
-      litellm_provider: openai
+# 模型列表配置
+model_list:
+  # ==================== OpenAI 模型 ====================
+  - model_name: gpt-3.5-turbo
+    litellm_params:
+      model: gpt-3.5-turbo
+      api_key: os.environ/OPENAI_API_KEY
 
-    # ==================== 千问模型 ====================
-    # 使用 LiteLLM 支持的标准千问模型名称
-    - model_name: qwen-turbo
-      litellm_provider: dashscope
-    
-    - model_name: qwen-plus
-      litellm_provider: dashscope
-    
-    - model_name: qwen-max
-      litellm_provider: dashscope
+  - model_name: gpt-4
+    litellm_params:
+      model: gpt-4
+      api_key: os.environ/OPENAI_API_KEY
 
-    # ==================== DeepSeek 模型 ====================
-    # 使用 LiteLLM 支持的标准 DeepSeek 模型名称
-    - model_name: deepseek-chat
-      litellm_provider: deepseek
-    
-    - model_name: deepseek-coder
-      litellm_provider: deepseek
+  # ==================== 千问模型 ====================
+  - model_name: qwen-turbo
+    litellm_params:
+      model: qwen-turbo
+      api_key: os.environ/DASHSCOPE_API_KEY
+      api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
 
-    # ==================== 本地模型 ====================
-    - model_name: llama3
-      litellm_provider: ollama
-      api_base: http://host.docker.internal:11434
+  - model_name: qwen-plus
+    litellm_params:
+      model: qwen-plus
+      api_key: os.environ/DASHSCOPE_API_KEY
+      api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
+
+  - model_name: qwen-max
+    litellm_params:
+      model: qwen-max
+      api_key: os.environ/DASHSCOPE_API_KEY
+      api_base: https://dashscope.aliyuncs.com/compatible-mode/v1
+
+  # ==================== DeepSeek 模型 ====================
+  - model_name: deepseek-chat
+    litellm_params:
+      model: deepseek-chat
+      api_key: os.environ/DEEPSEEK_API_KEY
+      api_base: https://api.deepseek.com
+
+  - model_name: deepseek-coder
+    litellm_params:
+      model: deepseek-coder
+      api_key: os.environ/DEEPSEEK_API_KEY
+      api_base: https://api.deepseek.com
+
+# 通用设置
+litellm_settings:
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
+  set_verbose: true
+  request_timeout: 60
