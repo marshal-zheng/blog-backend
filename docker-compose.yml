@@ -15,9 +15,8 @@ services:
     image: ghcr.io/berriai/litellm:main-latest          # 跟随主分支最新功能
     container_name: litellm-proxy
     command: >
-      litellm
-        --config /app/config/litellm.yaml
-        --port 4000
+      --config /app/config/litellm.yaml
+      --port 4000
     env_file:
       - litellm/config-secret.env                       # 存放 OPENAI_API_KEY 等
     volumes:
